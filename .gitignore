@@ -87,3 +87,16 @@ docker/
 
 # Конфиг, который создает докер
 /config
+
+# Custom local data (not for upstream)
+dev/
+.playwright-mcp/
+.claude/
+uv.lock
+*.log
+.mcp.json
+
+# Custom scripts and configs
+custom/
+CLAUDE.md
+ORCHESTRATION_PROMPT.md

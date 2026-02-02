@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - ~/.config/hh-applicant-tool:/app/config
       # Пробрасываем таймзону хоста
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
@@ -17,3 +17,32 @@ services:
       - TERM=${TERM}
       # Если время на сервере отличается
       # - TZ=Europe/Moscow
+      - HH_PROFILE_ID=account1
+
+  hh_account2:
+    extends: hh_applicant_tool
+    container_name: hh_account2
+    environment:
+      - CONFIG_DIR=/app/config
+      - HH_PROFILE_ID=account2
+
+  hh_account3:
+    extends: hh_applicant_tool
+    container_name: hh_account3
+    environment:
+      - CONFIG_DIR=/app/config
+      - HH_PROFILE_ID=account3
+
+  hh_account4:
+    extends: hh_applicant_tool
+    container_name: hh_account4
+    environment:
+      - CONFIG_DIR=/app/config
+      - HH_PROFILE_ID=account4
+
+  hh_account5:
+    extends: hh_applicant_tool
+    container_name: hh_account5
+    environment:
+      - CONFIG_DIR=/app/config
+      - HH_PROFILE_ID=account5

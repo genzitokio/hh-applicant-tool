@@ -19,6 +19,6 @@ SHELL=/bin/bash
 
 # Пытаемся обновить токен каждую минуту. В этом нет необходимости, можно закомментировать, так как
 # токен обновляется автоматически при любом запросе
-*/1 * * * * /usr/local/bin/python -m hh_applicant_tool refresh-token
+#*/1 * * * * /usr/local/bin/python -m hh_applicant_tool refresh-token
 
 #*/1 * * * * echo "Cron is alive at $(date)" >> /var/log/cron.log 2>&1
