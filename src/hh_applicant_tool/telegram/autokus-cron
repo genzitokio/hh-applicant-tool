@@ -1,0 +1,11 @@
+# AutoKus Cron Jobs
+# Установить: sudo cp autokus-cron /etc/cron.d/autokus
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/home/flyingkuskus/.local/bin
+
+# Каждые 2 минуты с 9 до 21 — проверка и ответ
+*/2 9-21 * * * flyingkuskus cd /home/flyingkuskus/AutoKus && claude --continue -p "проверь новые сообщения от @billyhargrofe, если есть новые от него — ответь" --dangerously-skip-permissions 2>&1 | tee -a /home/flyingkuskus/AutoKus/logs/check.log
+
+# В 21:00 — дневной отчёт
+0 21 * * * flyingkuskus cd /home/flyingkuskus/AutoKus && claude --continue -p "отправь сводку за день в @genziii" --dangerously-skip-permissions 2>&1 | tee -a /home/flyingkuskus/AutoKus/logs/daily.log

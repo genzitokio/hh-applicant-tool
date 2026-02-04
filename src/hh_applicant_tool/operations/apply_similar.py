@@ -38,6 +38,9 @@ class Namespace(BaseNamespace):
     search: str
     schedule: str
     dry_run: bool
+    skip_tests: bool
+    chrome_profile: str | None
+    glm_key: str | None
     # Пошли доп фильтры, которых не было
     experience: str
     employment: list[str] | None
@@ -125,6 +128,24 @@ class Operation(BaseOperation):
             "--dry-run",
             help="Не отправлять отклики, а только выводить информацию",
             action=argparse.BooleanOptionalAction,
+        )
+        parser.add_argument(
+            "--skip-tests",
+            help="Пропускать вакансии с тестами (по умолчанию откликаемся через web)",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+        )
+        parser.add_argument(
+            "--chrome-profile",
+            help="Имя профиля Chrome для извлечения кук (для откликов с тестами)",
+            type=str,
+            default=None,
+        )
+        parser.add_argument(
+            "--glm-key",
+            help="API ключ Z.AI GLM для генерации ответов на тесты",
+            type=str,
+            default=None,
         )
 
         # Дальше идут параметры в точности соответствующие параметрам запроса
@@ -286,7 +307,60 @@ class Operation(BaseOperation):
         self.openai_chat = (
             tool.get_openai_chat(args.first_prompt) if args.use_ai else None
         )
+        self.skip_tests = args.skip_tests
+        self.chrome_profile = args.chrome_profile
+        self.glm_key = args.glm_key
+        self.web_applier = None
+        self._init_web_applier()
         self._apply_similar()
+
+    def _init_web_applier(self) -> None:
+        """Initialize web applier for vacancies with tests."""
+        if self.skip_tests:
+            return
+
+        try:
+            from ..web import ApplyWithTests
+
+            # Setup answer generator (use_ai=False by default for fast templates)
+            answer_generator = None
+            try:
+                from ..ai.glm import create_test_answer_generator
+
+                # AI enabled by default (uses local Gemini proxy)
+                proxy = self.tool.config.get("proxy", {}).get("https")
+                answer_generator = create_test_answer_generator(
+                    api_key=self.glm_key,
+                    proxy=proxy,
+                    use_ai=True,  # Always use AI via local Gemini proxy
+                )
+                logger.info("Answer generator initialized (AI=True)")
+            except Exception as e:
+                logger.warning("Failed to init answer generator: %s", e)
+
+            self.web_applier = ApplyWithTests(
+                config=self.tool.config,
+                chrome_profile=self.chrome_profile,
+                answer_strategy="first",
+                answer_generator=answer_generator,
+            )
+            if self.web_applier.init_session():
+                logger.info("Web applier initialized for test vacancies")
+            else:
+                logger.warning(
+                    "Web applier session invalid - test vacancies will be skipped"
+                )
+                self.web_applier = None
+        except ImportError as e:
+            logger.warning(
+                "Web applier dependencies not installed: %s. "
+                "Install with: pip install curl_cffi browser-cookie3",
+                e,
+            )
+            self.web_applier = None
+        except Exception as e:
+            logger.error("Failed to init web applier: %s", e)
+            self.web_applier = None
 
     def _apply_similar(self) -> None:
         resumes: list[datatypes.Resume] = self.tool.get_resumes()
@@ -388,11 +462,95 @@ class Operation(BaseOperation):
                     continue
 
                 if vacancy.get("has_test"):
-                    logger.debug(
-                        "Пропускаем вакансию с тестом: %s",
-                        vacancy["alternate_url"],
-                    )
-                    continue
+                    if self.skip_tests:
+                        logger.debug(
+                            "Пропускаем вакансию с тестом (skip_tests): %s",
+                            vacancy["alternate_url"],
+                        )
+                        continue
+
+                    # Try web apply if available
+                    if self.web_applier:
+                        try:
+                            if not self.dry_run:
+                                result = self.web_applier.apply(
+                                    vacancy_id=vacancy["id"],
+                                    resume_hash=None,  # Will use first available
+                                )
+                                if result["success"]:
+                                    print(
+                                        ">>> Отправили отклик с тестом на",
+                                        vacancy["alternate_url"],
+                                        f"(вопросов: {result['questions_count']})",
+                                    )
+                                    continue
+                                # Fallback errors - test is not required
+                                fallback_errors = [
+                                    "quickResponse:",
+                                    "no_test_required",
+                                    "unexpected_type:",
+                                    "form_fetch_failed",
+                                ]
+                                if any(
+                                    result.get("error", "").startswith(e)
+                                    for e in fallback_errors
+                                ):
+                                    logger.debug(
+                                        "Web apply %s, trying API fallback",
+                                        result.get("error"),
+                                    )
+                                    # Fall through to API apply below
+                                else:
+                                    logger.warning(
+                                        "Web apply failed for %s: %s",
+                                        vacancy["alternate_url"],
+                                        result.get("error"),
+                                    )
+                                    continue
+                            else:
+                                # Dry-run: still check form parsing works
+                                dry_result = self.web_applier.check_vacancy(
+                                    vacancy["id"]
+                                )
+                                vtype = dry_result.get("type", "")
+                                if vtype in ("test-required", "modal", "html"):
+                                    form = self.web_applier.get_form(vacancy["id"])
+                                    if form and form.questions:
+                                        print(
+                                            f"[DRY] Отклик с тестом на {vacancy['alternate_url']} "
+                                            f"(вопросов: {len(form.questions)})"
+                                        )
+                                        for i, q in enumerate(form.questions, 1):
+                                            logger.debug(
+                                                "  Q%d: %s -> %s",
+                                                i,
+                                                q.question_type,
+                                                q.question_text[:50] if q.question_text else "(empty)",
+                                            )
+                                    else:
+                                        print(
+                                            f"[DRY] Отклик с тестом на {vacancy['alternate_url']} "
+                                            "(форма не распарсилась!)"
+                                        )
+                                else:
+                                    print(
+                                        f"[DRY] Вакансия {vacancy['alternate_url']} "
+                                        f"type={vtype} (не тест)"
+                                    )
+                                continue
+                        except Exception as e:
+                            logger.error(
+                                "Web apply error for %s: %s, trying API fallback",
+                                vacancy["alternate_url"],
+                                e,
+                            )
+                            # Fall through to API apply
+                    else:
+                        logger.debug(
+                            "Web applier not available, trying API for %s",
+                            vacancy["alternate_url"],
+                        )
+                        # Fall through to API apply
 
                 if vacancy.get("archived"):
                     logger.debug(

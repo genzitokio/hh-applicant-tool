@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "description": "OSINT tools for Telegram scraping and analysis",
+    "created": "2026-01-29"
+  },
+  "python_libraries": [
+    {
+      "name": "Telethon",
+      "url": "https://github.com/LonamiWebs/Telethon",
+      "docs": "https://docs.telethon.dev/",
+      "status": "active",
+      "description": "Pure Python 3 MTProto API Telegram client library"
+    },
+    {
+      "name": "Pyrogram",
+      "url": "https://github.com/pyrogram/pyrogram",
+      "docs": "https://docs.pyrogram.org/",
+      "status": "unmaintained",
+      "forks": ["WPyrogram", "Kurigram"]
+    }
+  ],
+  "scraper_tools": [
+    {
+      "name": "Telsca",
+      "url": "https://github.com/JulietKiloCharlie/Telsca-Telegram-Scraper",
+      "features": ["GUI", "members", "messages", "media"],
+      "export": ["CSV", "JSON"],
+      "osint_focused": true
+    },
+    {
+      "name": "telegram-scraper",
+      "url": "https://github.com/unnohwn/telegram-scraper",
+      "features": ["messages", "media", "realtime", "resume"],
+      "export": ["JSON", "CSV"]
+    },
+    {
+      "name": "telegram-member-scraper",
+      "url": "https://github.com/ivanstruk/telegram-member-scraper",
+      "features": ["members export"],
+      "export": ["CSV"]
+    },
+    {
+      "name": "TelegramScraper",
+      "url": "https://github.com/TechRahul20/TelegramScraper",
+      "features": ["members", "disinformation research"],
+      "export": ["CSV"]
+    },
+    {
+      "name": "Telegram-Scrapper",
+      "url": "https://github.com/Talish-wiz/Telegram-Scrapper",
+      "features": ["chat data", "members", "messages"],
+      "export": ["JSON"]
+    },
+    {
+      "name": "TG-Parser",
+      "url": "https://github.com/Grigorich-JSDio/TG-Parser",
+      "features": ["members", "messages", "comments"],
+      "export": ["CSV", "TXT", "JSON"]
+    },
+    {
+      "name": "Telegradd",
+      "url": "https://github.com/evilbream/Telegradd",
+      "features": ["scraper", "adder", "proxy support", "multi-account"],
+      "export": ["CSV"]
+    }
+  ],
+  "osint_bots": {
+    "group_search": [
+      {
+        "name": "TgScanRobot",
+        "username": "@TgScanRobot",
+        "function": "Find groups by username/ID",
+        "database": "400k channels, 70M users"
+      },
+      {
+        "name": "ChatSearchRobot",
+        "username": "@ChatSearchRobot",
+        "function": "Find similar groups"
+      },
+      {
+        "name": "SearcheeBot",
+        "username": "@SearcheeBot",
+        "function": "Search in Telegram"
+      }
+    ],
+    "user_info": [
+      {
+        "name": "IDBot",
+        "username": "@userinfobot",
+        "function": "Get Telegram ID"
+      },
+      {
+        "name": "Account Creation Bot",
+        "username": "@creaborbot",
+        "function": "Account creation date"
+      },
+      {
+        "name": "SangMata",
+        "username": "@SangMata_BOT",
+        "function": "Username history"
+      }
+    ],
+    "probiv_gray_zone": [
+      {
+        "name": "Глаз Бога",
+        "function": "Phone → TG, email, VK",
+        "paid": true,
+        "region": "RU"
+      },
+      {
+        "name": "Quick OSINT",
+        "function": "Comprehensive lookup",
+        "paid": true
+      },
+      {
+        "name": "GetContact",
+        "function": "Phone → name",
+        "paid": false
+      },
+      {
+        "name": "PhoneLeaks",
+        "username": "@PhoneLeaks_bot",
+        "function": "Phone leaks lookup"
+      }
+    ]
+  },
+  "search_engines": [
+    {
+      "name": "TGStat",
+      "url": "https://tgstat.ru",
+      "features": ["2.6M+ channels", "analytics", "API"],
+      "api": "https://tgstat.ru/en/api"
+    },
+    {
+      "name": "Lyzem",
+      "url": "https://lyzem.com",
+      "features": ["deep search", "Telegraph", "free"],
+      "api": null
+    },
+    {
+      "name": "Telemetr",
+      "url": "https://telemetr.me",
+      "features": ["analytics", "search"]
+    },
+    {
+      "name": "Combot",
+      "url": "https://combot.org",
+      "features": ["moderation", "chat search"]
+    }
+  ],
+  "github_resources": [
+    {
+      "name": "Awesome-Telegram-OSINT",
+      "url": "https://github.com/ItIsMeCall911/Awesome-Telegram-OSINT",
+      "description": "Curated list of Telegram OSINT tools"
+    },
+    {
+      "name": "The-Osint-Toolbox/Telegram-OSINT",
+      "url": "https://github.com/The-Osint-Toolbox/Telegram-OSINT",
+      "description": "In-depth Telegram OSINT resources"
+    },
+    {
+      "name": "tosint",
+      "url": "https://github.com/drego85/tosint",
+      "description": "Extract info from bots and channels"
+    },
+    {
+      "name": "telegram-osint",
+      "url": "https://github.com/yusiqo/telegram-osint",
+      "description": "User info + common groups"
+    },
+    {
+      "name": "Geogramint",
+      "url": "https://github.com/Alb-310/Geogramint",
+      "description": "Geolocalization of nearby users"
+    }
+  ]
+}

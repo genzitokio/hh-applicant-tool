@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -194,8 +195,8 @@ class Operation(BaseOperation):
                 )
                 await page.goto(
                     api_client.oauth_client.authorize_url,
-                    timeout=30000,
-                    wait_until="load",
+                    timeout=60000,
+                    wait_until="domcontentloaded",
                 )
 
                 if self.is_automated:
@@ -243,15 +244,8 @@ class Operation(BaseOperation):
 
                 storage.settings.set_value("auth.last_login", datetime.now())
 
-                # storage.settings.set_value(
-                #     "auth.access_token", token["access_token"]
-                # )
-                # storage.settings.set_value(
-                #     "auth.refresh_token", token["refresh_token"]
-                # )
-                # storage.settings.set_value(
-                #     "auth.refresh_token", token["expires_in"]
-                # )
+                # Сохранить куки и GIB для web модуля (отклики с тестами)
+                await self._save_web_session(tool, context, page)
 
             finally:
                 logger.debug("Закрытие браузера")
@@ -340,3 +334,90 @@ class Operation(BaseOperation):
 
         await page.fill(self.SELECT_CAPTCHA_INPUT, captcha_text)
         await page.press(self.SELECT_CAPTCHA_INPUT, "Enter")
+
+    async def _save_web_session(self, tool, context, page) -> None:
+        """Сохранить куки и GIB токены для web модуля."""
+        try:
+            # Получить auth куки из мобильного контекста
+            all_cookies = await context.cookies()
+            auth_cookies = [
+                c for c in all_cookies
+                if "hh.ru" in c.get("domain", "")
+                and c["name"] in ("hhtoken", "hhuid", "_xsrf", "crypted_hhuid", "crypted_id")
+            ]
+
+            if not auth_cookies:
+                logger.warning("Не найдены auth куки hh.ru")
+                return
+
+            # Создаем desktop контекст для получения правильных кук
+            logger.debug("Создаем desktop контекст для web кук...")
+            browser = context.browser
+            desktop_context = await browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            )
+
+            # Копируем auth куки в desktop контекст
+            await desktop_context.add_cookies(auth_cookies)
+
+            desktop_page = await desktop_context.new_page()
+
+            # Переход на hh.ru в desktop режиме
+            logger.debug("Переход на hh.ru для получения desktop кук и GIB...")
+            try:
+                await desktop_page.goto(
+                    "https://hh.ru",
+                    wait_until="networkidle",
+                    timeout=30000,
+                )
+            except Exception as e:
+                logger.warning("Не удалось загрузить hh.ru: %s", e)
+
+            # Подождать загрузки GIB скриптов
+            gib_headers = None
+            for attempt in range(5):
+                await asyncio.sleep(1)
+                try:
+                    gib_headers = await desktop_page.evaluate(
+                        "() => window.gib && window.gib.getOTTHeaders "
+                        "? window.gib.getOTTHeaders() : null"
+                    )
+                    if gib_headers:
+                        logger.debug("GIB токены получены на попытке %d", attempt + 1)
+                        break
+                except Exception:
+                    pass
+
+            # Получить все куки из desktop контекста
+            desktop_cookies = await desktop_context.cookies()
+            hh_cookies = {
+                c["name"]: c["value"]
+                for c in desktop_cookies
+                if "hh.ru" in c.get("domain", "")
+            }
+
+            # Закрыть desktop контекст
+            await desktop_context.close()
+
+            # Сохранить в config dir
+            config_dir = tool.config._config_path.parent
+            config_dir.mkdir(parents=True, exist_ok=True)
+
+            cookies_path = config_dir / "web_cookies.json"
+            with open(cookies_path, "w") as f:
+                json.dump(hh_cookies, f, indent=2)
+            logger.info("Сохранено %d кук в %s", len(hh_cookies), cookies_path)
+
+            if gib_headers:
+                gib_path = config_dir / "gib_cache.json"
+                with open(gib_path, "w") as f:
+                    json.dump(gib_headers, f, indent=2)
+                logger.info("GIB токены сохранены в %s", gib_path)
+            else:
+                logger.warning("GIB токены не найдены (window.gib не загружен)")
+
+            print("Куки и GIB сохранены для web откликов")
+
+        except Exception as e:
+            logger.error("Ошибка сохранения web сессии: %s", e)
