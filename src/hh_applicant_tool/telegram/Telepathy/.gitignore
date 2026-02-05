@@ -1,6 +1,0 @@
-*.session
-telepathy_files/
-.idea/
-.venv/
-*.session-journal
-*.csv

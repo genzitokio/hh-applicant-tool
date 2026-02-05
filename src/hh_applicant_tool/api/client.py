@@ -101,6 +101,7 @@ class BaseClient:
                 **payload,
                 headers=self._default_headers(),
                 allow_redirects=False,
+                timeout=30,  # 30 sec timeout to prevent hanging
             )
             try:
                 # У этих лошков сервер не отдает Content-Length, а кривое API

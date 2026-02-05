@@ -1,9 +1,0 @@
-# HR Whitelist
-# Отвечаем только этим контактам
-
-contacts:
-  # username: описание
-  billyhargrofe: "Билли Харгрув — тест"
-  myfcknusername: "Тест мониторинг"
-
-# Добавлять через /hr-add <username>

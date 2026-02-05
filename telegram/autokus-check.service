@@ -1,0 +1,12 @@
+[Unit]
+Description=AutoKus HR Check
+
+[Service]
+Type=oneshot
+User=flyingkuskus
+Environment="HOME=/home/flyingkuskus"
+Environment="PATH=/home/flyingkuskus/.local/bin:/usr/local/bin:/usr/bin:/bin"
+WorkingDirectory=/home/flyingkuskus/AutoKus
+ExecStart=/home/flyingkuskus/.local/bin/claude -p "проверь новые сообщения от @billyhargrofe, если есть новые от него — ответь" --allowedTools "mcp__telegram-mcp__*" --dangerously-skip-permissions --mcp-debug
+StandardOutput=append:/home/flyingkuskus/AutoKus/logs/check.log
+StandardError=append:/home/flyingkuskus/AutoKus/logs/check.log

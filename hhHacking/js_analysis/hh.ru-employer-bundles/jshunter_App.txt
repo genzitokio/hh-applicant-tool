@@ -1,0 +1,19 @@
+
+         ________             __         
+     __ / / __/ /  __ _____  / /____ ____
+    / // /\ \/ _ \/ // / _ \/ __/ -_) __/
+    \___/___/_//_/\_,_/_//_/\__/\__/_/  
+
+     v0.5 ([0;32mlatest[0m)                         Created by cc1a2b
+[[0;31mFOUND[0m] FILE: deobfuscated/App/deobfuscated.js
+[[0;31m FOUND [0m] Sensitive data at: deobfuscated/App/deobfuscated.js
+Sensitive Data [[0;33mTwilio App Sid[0m]: APPEND_ADDITIONAL_DATA_ACHIEVEMENT
+Sensitive Data [[0;33mTwilio App Sid[0m]: APPLICANT_SKILLS_VERIFICATION_ERRO
+Sensitive Data [[0;33mTwilio App Sid[0m]: APPLICANT_SKILLS_VERIFICATION_RESU
+Sensitive Data [[0;33mTwilio App Sid[0m]: APPLICANT_VACANCY_RESPONSE_STATUS_
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password: "/account/invalidate_password"
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password: "/account/remember_password"
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password: "/account/restore_password"
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password = "changePassword"
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password = "createPassword"
+Sensitive Data [[0;33mPassword Hardcoded[0m]: Password = "INVALID_PASSWORD"
